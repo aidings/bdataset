@@ -28,5 +28,5 @@ class HDF5:
     
     def export(self, root_path='./sample', name='bdata', npart=1, progress=True, *args, **kwargs):
         self.t.start()
-        data_dict = self._parse(*args, **kwargs)
-        HDF5.save2hdf5(data_dict, root_path=root_path, name=name, npart=npart, progress=progress)
+        self.data_dict = self._parse(*args, **kwargs)
+        HDF5.save2hdf5(self.data_dict, root_path=root_path, name=name, npart=npart, progress=progress)

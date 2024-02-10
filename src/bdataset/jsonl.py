@@ -14,10 +14,10 @@ class Header:
     def __identify(__value):
         return __value
 
-    def __setitem__(self, __name: str, __value: Callable) -> None:
+    def __setitem__(self, __name: str, __value: bool) -> None:
         self.header[__name] = {'encode': None, 'decode': None}
-        self.header[__name]['encode'] = Header.__identify if __value is None else pickle.dumps
-        self.header[__name]['decode'] = Header.__identify if __value is None else pickle.loads
+        self.header[__name]['encode'] = pickle.dumps if __value else Header.__identify
+        self.header[__name]['decode'] = pickle.loads if __value else Header.__identify 
     
     def __getitem__(self, __name: str):
         raise NotImplementedError
@@ -52,3 +52,6 @@ class Jsonl(Header, HDF5):
         print(f'timer:{self.t.running()} file:{idx:08d}')
  
         return data_dict
+    
+    def decode(self, __name: str, __value):
+        return self.header[__name]['decode'](self.data_dict[__value])
