@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright 2019 Vivo Inc. All Rights Reserved.
 # @Time             : 2019/10/20 8:59 AM
@@ -8,14 +7,14 @@
 from setuptools import find_packages, setup
 
 setup(name='bdataset',  # 包名
-      version='0.0.1',  # 版本号
+      version='0.0.2',  # 版本号
       description='',
       long_description='',
       author='zhifeng.ding',
-      author_email='zhifeng.ding@vivo.com',
+      author_email='zhifeng.ding@hqu.edu.cn',
       url='',
       license='',
-      install_requires=[],
+      install_requires=['vaex'],
       extras_require={},
       dependency_links=[
           "https://pypi.tuna.tsinghua.edu.cn/simple",
