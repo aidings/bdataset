@@ -1,7 +1,7 @@
 import jsonlines
-from typing import List, Callable
-import pickle
+from typing import List
 from .data_dict import HDF5
+import json
 
 
 class Header:
@@ -16,8 +16,8 @@ class Header:
 
     def __setitem__(self, __name: str, __value: bool) -> None:
         self.header[__name] = {'encode': None, 'decode': None}
-        self.header[__name]['encode'] = pickle.dumps if __value else Header.__identify
-        self.header[__name]['decode'] = pickle.loads if __value else Header.__identify 
+        self.header[__name]['encode'] = json.dumps if __value else Header.__identify
+        self.header[__name]['decode'] = json.loads if __value else Header.__identify 
     
     def __getitem__(self, __name: str):
         raise NotImplementedError
