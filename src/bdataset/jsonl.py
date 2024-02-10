@@ -41,11 +41,14 @@ class Jsonl(Header, HDF5):
         if not (json_path := kwargs.get('json_path', None)): 
             json_path = args[0]
         data_dict = self.create()
-        
+
+        idx = 1 
         with jsonlines.open(json_path) as reader:
             for item in reader.iter(type=dict, skip_invalid=True):
                 for key in self.header.keys():
                     data_dict[key].append(self.encode(key, item.get(key, None)))
-                print(self.t.running(), end='\r')
+                print(f'timer:{self.t.running()} file:{idx:08d}', end='\r')
+                idx += 1
+        print(f'timer:{self.t.running()} file:{idx:08d}')
  
         return data_dict
