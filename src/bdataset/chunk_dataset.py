@@ -2,6 +2,7 @@ import os
 import math
 import vaex
 from pathlib import Path
+from timer import timer
 
 
 class ChunkDatatset:
@@ -28,6 +29,7 @@ class ChunkDatatset:
     def __len__(self):
         return math.ceil(len(self.df) / self.chunk_size)
 
+    @timer('inject')
     def inject(self, idx):
         start = idx * self.chunk_size
         end = min(start + self.chunk_size, len(self.df))
