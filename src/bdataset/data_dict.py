@@ -1,7 +1,10 @@
 import vaex
 import math
+import json
 from pathlib import Path
 from timer import Timer
+from typing import List
+from collections import OrderedDict
 
 class HDF5:
     def __init__(self, data_dict=None, prefix='bdata'):
@@ -27,6 +30,33 @@ class HDF5:
         return self.data_dict
     
     def export(self, root_path='./sample', name='bdata', npart=1, progress=True, *args, **kwargs):
-        self.t.start()
+        self.t.start(reset=True)
         self.data_dict = self._parse(*args, **kwargs)
         HDF5.save2hdf5(self.data_dict, root_path=root_path, name=name, npart=npart, progress=progress)
+
+class Header:
+    def __init__(self, header:List=[]):
+        self.header = OrderedDict()
+        for key in header:
+            self[key] = None
+
+    @staticmethod 
+    def __identify(__value):
+        return __value
+
+    def __setitem__(self, __name: str, __value: bool) -> None:
+        self.header[__name] = {'encode': None, 'decode': None}
+        self.header[__name]['encode'] = json.dumps if __value else Header.__identify
+        self.header[__name]['decode'] = json.loads if __value else Header.__identify 
+    
+    def __getitem__(self, __name: str):
+        raise NotImplementedError
+    
+    def encode(self, __name: str, __value):
+        return self.header[__name]['encode'](__value)
+    
+    def decode(self, __name: str, __value):
+        return self.header[__name]['decode'](__value)
+    
+    def create(self):
+        return dict([(key, []) for key in self.header.keys()])

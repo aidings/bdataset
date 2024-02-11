@@ -8,7 +8,7 @@ if __name__ == '__main__':
     ck = ChunkDatatset('./sample_1', chunk_size=15, shuffle=True)
     print(len(ck))
     for i in range(len(ck)):
-        print('='*20)
+        print('='*40)
         ck.inject(i)
         for data in ck:
             print(data)

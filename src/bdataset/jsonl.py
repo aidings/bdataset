@@ -1,35 +1,6 @@
 import jsonlines
 from typing import List
-from .data_dict import HDF5
-import json
-
-
-class Header:
-    def __init__(self, header:List=[]):
-        self.header = {}
-        for key in header:
-            self[key] = None
-
-    @staticmethod 
-    def __identify(__value):
-        return __value
-
-    def __setitem__(self, __name: str, __value: bool) -> None:
-        self.header[__name] = {'encode': None, 'decode': None}
-        self.header[__name]['encode'] = json.dumps if __value else Header.__identify
-        self.header[__name]['decode'] = json.loads if __value else Header.__identify 
-    
-    def __getitem__(self, __name: str):
-        raise NotImplementedError
-    
-    def encode(self, __name: str, __value):
-        return self.header[__name]['encode'](__value)
-    
-    def decode(self, __name: str, __value):
-        return self.header[__name]['decode'](__value)
-    
-    def create(self):
-        return dict([(key, []) for key in self.header.keys()]) 
+from .data_dict import HDF5, Header
 
 
 class Jsonl(Header, HDF5):
