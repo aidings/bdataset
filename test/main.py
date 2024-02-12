@@ -1,15 +1,17 @@
-from bdataset import ChunkDatatset, Jsonl
+import torch
+import json
+from bdataset import FastImageDataset, FastLineReader
 
 
 if __name__ == '__main__':
-    jdict = Jsonl(header=['file_path', 'caption'])
-    jdict.export('sample_1', progress='rich', json_path='sample.jsonl')
+    # reader = FastLineReader('sample.jsonl', parse=json.loads, skip_head=True) 
+    reader = FastLineReader.from_index('sample.jsonl.index', parse=json.loads)
+    for data in reader:
+        print(data)
 
-    ck = ChunkDatatset('./sample_1', chunk_size=15, shuffle=True)
-    print(len(ck))
-    for i in range(len(ck)):
-        print('='*40)
-        ck.inject(i)
-        for data in ck:
-            print(data)
+    """
+    dataset = FastImageDataset([reader], 'img_path')
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, num_workers=4, shuffle=True)
+    """
 

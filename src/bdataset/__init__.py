@@ -1,6 +1,10 @@
-from .chunk_dataset import ChunkDatatset
-from .jsonl import Jsonl
-from .data_dict import Header, HDF5
-from .image_dataset import ImageDataset
+from .fast_line_dataset import InjectDataset, FastLineReader, FastLineDataset
+from .image_dataset import FastImageDataset, InjectImageDataset
 
-__all__ = ['ChunkDatatset', 'Header', 'Jsonl', 'HDF5', 'ImageDataset']
+__all__ = [
+    'InjectDataset', 
+    'FastLineReader', 
+    'FastLineDataset', 
+    'FastImageDataset', 
+    'InjectImageDataset'
+]

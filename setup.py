@@ -7,14 +7,14 @@
 from setuptools import find_packages, setup
 
 setup(name='bdataset',  # 包名
-      version='0.0.8',  # 版本号
+      version='0.1.0',  # 版本号
       description='',
       long_description='',
       author='zhifeng.ding',
       author_email='zhifeng.ding@hqu.edu.cn',
       url='',
       license='',
-      install_requires=['vaex', 'timer @ git+https://github.com/aidings/timer.git'],
+      install_requires=['loguru', 'numpy', 'pillow', 'timer @ git+https://github.com/aidings/timer.git'],
       extras_require={},
       dependency_links=[
           "https://pypi.tuna.tsinghua.edu.cn/simple",
