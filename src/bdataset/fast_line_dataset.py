@@ -135,7 +135,7 @@ class FastLineDataset:
             e = min(b + chunk_size, len(idxs))
             dataset.clean()
             for j in tqdm(range(b, e), colour='green', desc=f"inject:{i}"):
-                dataset.append(self[j])
+                dataset.append(self.read_line(j))
             yield dataset
 
 
