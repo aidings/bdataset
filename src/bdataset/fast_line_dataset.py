@@ -14,6 +14,9 @@ class InjectDataset:
     def __init__(self):
         self.datas = []
     
+    def __len__(self):
+        return len(self.datas)
+    
     def clean(self):
         self.datas = []
     
@@ -134,7 +137,7 @@ class FastLineDataset:
             b = i * chunk_size
             e = min(b + chunk_size, len(idxs))
             dataset.clean()
-            for j in tqdm(range(b, e), colour='green', desc=f"inject:{i}"):
+            for j in tqdm(range(b, e), colour='green', desc=f"inject:{i:02d}/{nck}"):
                 dataset.append(self.read_line(j))
             yield dataset
 
