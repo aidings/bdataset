@@ -108,10 +108,14 @@ class FastLineReader:
 
 
 class FastLineDataset:
-    def __init__(self, readers):
+    def __init__(self, readers: FastLineReader):
         self.readers = readers
         sizes = np.array([0] + [len(reader) for reader in self.readers])
         self.sizes = np.cumsum(sizes)
+    
+    @classmethod
+    def from_index(cls, index_files, parse=None):
+        return cls([FastLineReader.from_index(index_file, parse=parse) for index_file in index_files])
 
     def __len__(self):
         return self.sizes[-1]
