@@ -7,7 +7,7 @@
 from setuptools import find_packages, setup
 
 setup(name='bdataset',  # 包名
-      version='0.1.1',  # 版本号
+      version='0.1.2',  # 版本号
       description='',
       long_description='',
       author='zhifeng.ding',
@@ -37,6 +37,6 @@ setup(name='bdataset',  # 包名
       package_dir={'': 'src'},  # 必填
       include_package_data=True,
       scripts= [
-          # './script/xxx.py'
+          './scripts/create_indexs'
       ],
 )

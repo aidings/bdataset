@@ -42,7 +42,9 @@ class FastLineReader:
                 if not self.index_path.exists():
                     self.index_path = Path(self.file_path.name + '.index')
             else:
-                self.index_path = index_path
+                self.index_path = Path(index_path)
+                if self.index_path.suffix != '.index':
+                    raise RuntimeError(f"index_path suffix must be .index, got {self.index_path.suffix}")
             
             if not self.index_path.exists():
                 self.build(skip_head=skip_head)
@@ -140,28 +142,3 @@ class FastLineDataset:
             for j in tqdm(range(b, e), colour='green', desc=f"inject:{i:02d}/{nck}"):
                 dataset.append(self.read_line(j))
             yield dataset
-
-
-
-
-if __name__ == '__main__':
-    import json
-    paths = [
-        "/data/vjuicefs_hz_cv_va/public_data/11120102/data/train_json/T2ITrainV3.0/data14071785_modify3480914_part0.jsonl",
-        "/data/vjuicefs_hz_cv_va/public_data/11120102/data/train_json/T2ITrainV3.0/data14044825_modify3015526_part1.jsonl"
-    ]
-
-    readers = [FastLineReader(path, parse=json.loads) for path in paths]
-    dataset = FastLineDataset(readers)
-    import torch
-
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, num_workers=4, shuffle=True)
-    it = iter(dataloader)
-
-    with Timer('get 1000'): 
-        for i in range(1000):
-            # idx = random.randint(0, len(dataset))
-            # print(i, idx, dataset[idx])
-
-            data = next(it)
-            print(data)

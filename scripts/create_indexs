@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import argparse
+from pathlib import Path
+from bdataset import FastLineReader
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('create a line index for a file')
+    parser.add_argument('-i', '--input_file', nargs='+', help='input file path')
+    parser.add_argument('-o', '--output_dir', default='./indexs', help='output file dir')
+    parser.add_argument('-s', '--skip_head', action='store_true', help='skip head')
+
+    args = parser.parse_args()
+
+    index_root = Path(args.output_dir)
+    index_root.mkdir(parents=True, exist_ok=True)
+    for file_path in args.input_file:
+        index_file = index_root / (Path(file_path).name + '.index')
+        reader = FastLineReader(file_path, index_path=index_file, skip_head=args.skip_head)
+        del reader
+
