@@ -7,7 +7,7 @@
 from setuptools import find_packages, setup
 
 setup(name='bdataset',  # 包名
-      version='0.1.3',  # 版本号
+      version='0.2.0',  # 版本号
       description='',
       long_description='',
       author='zhifeng.ding',

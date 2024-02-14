@@ -1,4 +1,5 @@
-import math
+# Released under MIT license
+# Copyright (c) 2024 zhifeng.ding (vivo)
 import mmap
 from tqdm import tqdm
 import contextlib
@@ -8,11 +9,13 @@ import pickle
 import random
 from timer import timer, Timer
 import numpy as np
+from loguru import logger
+from .image_bucket import ImageBuckets
 
 
 class InjectDataset:
-    def __init__(self):
-        self.datas = []
+    def __init__(self, datas=[]):
+        self.datas = datas
     
     def __len__(self):
         return len(self.datas)
@@ -24,16 +27,76 @@ class InjectDataset:
         self.datas.append(data)
     
     def transforms(self, idx):
-        return self.datas[idx]
+        raise NotImplementedError("return a tensor or dict/list of tensor")
     
     def __getitem__(self, idx):
-        return self.transforms(idx)
+        # return a single data
+        data = None
+        while True:
+            try:
+                data = self.transforms(idx)
+                break
+            except:
+                logger.warning(f'error data: {idx}')
+                idx = random.randint(0, self.__len__()-1) 
+
+        return data 
+
+
+class InjectBucketDataset:
+    def __init__(self, buckets: ImageBuckets):
+        self.bucket = buckets
+        self.datas = []
+    
+    def __len__(self):
+        return len(self.datas)
+    
+    def clean(self):
+        self.datas = []
+    
+    def data2node(self, line_data):
+        raise NotImplementedError("return a BuckNode")
+    
+    def append(self, line_data):
+        flag = self.bucket.inject(self.data2node(line_data))
+        if flag != -1:
+            self.datas.append(line_data)
+    
+    def transforms(self, idx, resolution):
+        raise NotImplementedError("return a tensor or dict/list of tensor")
+    
+    def totensor(self, datas):
+        raise NotImplementedError("batch a list datas and return a tensor or dict/list of tensor")
+
+    def shuffle(self, epoch):
+        # shuffle the bucket
+        self.bucket.shuffle(epoch)
+
+    def make(self, batch_size, shuffle=True):
+        # make a bucket dataset, please call this function before training
+        self.bucket.make(batch_size, shuffle=shuffle)
+
+    def __getitem__(self, idx):
+        # return a batch data
+        datas = []
+        bidxs, resolution = self.bucket[idx]
+        for bdx in bidxs:
+            while True:
+                try:
+                    data = self.transforms(bdx, resolution)
+                    datas.append(data)
+                    break
+                except:
+                    logger.warning(f'error data: {bdx}')
+                    bdx = random.choice(bidxs)
+        return self.totensor(datas)
 
 
 class FastLineReader:
     def __init__(self, file_path, index_path=None, parse=None, skip_head:bool=False):
         self.file_path = Path(file_path)
-        self.fp = open(self.file_path, 'r') 
+        self.fp = open(self.file_path, 'r')
+        self.mmap = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ) 
 
         if not isinstance(index_path, (tuple, list)):
 
@@ -58,7 +121,6 @@ class FastLineReader:
             self.build(skip_head=skip_head)
             self.jdict = pickle.load(self.index_path.open('rb'))
 
-        self.mmap = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
         self.__parse = parse if parse else lambda x: x
     
     @classmethod
@@ -76,7 +138,7 @@ class FastLineReader:
             jdict = {"source": self.file_path, "size": os.path.getsize(self.file_path), "skip_head": skip_head, "fpos": []}
             with contextlib.closing(mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)) as m:
                 b = m.tell()
-                pbar = tqdm(total=m.size(), desc='indexing', colour='green')
+                pbar = tqdm(total=m.size(), desc=f'{self.index_path.stem} indexing', colour='green')
                 while b < m.size():
                     _ = m.readline()
                     e = m.tell()
@@ -124,25 +186,39 @@ class FastLineDataset:
         return self.read_line(idx)
     
     def read_line(self, idx):
+        # 读取文件某一行，可重载；如果想过滤该行，将返回值置为None
         jdx = (self.sizes[1:] <= idx).sum()
         kdx = idx - self.sizes[jdx]
         return self.readers[jdx][kdx]
     
     def __getitem__(self, idx):
-        return self.transforms(idx)
+        data = None
+        while True:
+            try:
+                data = self.transforms(idx)
+                break
+            except:
+                idx = random.randint(0, self.__len__()-1) 
+                logger.warning(f'error data: {idx}')
+
+        return data 
     
-    def inject(self, subset_module:InjectDataset, chunk_size=10_000_000, shuffle=True):
-        idxs = np.arange(self.sizes[-1])
+    def inject(self, inject_module, chunk_size=10_000_000, shuffle=True):
+        n = self.sizes[-1]
+        idxs = np.arange(n)
         if shuffle:
             with Timer('shuffle'):
                 np.random.shuffle(idxs)
 
-        dataset = subset_module
-        nck = math.ceil(len(idxs) / chunk_size)
-        for i in range(nck):
-            b = i * chunk_size
-            e = min(b + chunk_size, len(idxs))
-            dataset.clean()
-            for j in tqdm(range(b, e), colour='green', desc=f"inject:{i:02d}/{nck}"):
-                dataset.append(self.read_line(j))
-            yield dataset
+        dataset = inject_module
+        dataset.clean()
+        i = 0 
+        while i < n:
+            line = self.read_line(idxs[i])
+            if line is not None:
+                dataset.append(line)
+            i += 1
+
+            if len(dataset) == chunk_size or i == n - 1:
+                yield dataset
+                dataset.clean()

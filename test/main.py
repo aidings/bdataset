@@ -1,6 +1,5 @@
-import torch
 import json
-from bdataset import FastImageDataset, FastLineReader
+from bdataset import FastLineReader
 
 
 if __name__ == '__main__':
