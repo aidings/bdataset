@@ -54,6 +54,7 @@ class InjectBucketDataset:
     
     def clean(self):
         self.datas = []
+        self.bucket.clean()
     
     def data2node(self, line_data):
         raise NotImplementedError("return a BuckNode")
@@ -73,9 +74,9 @@ class InjectBucketDataset:
         # shuffle the bucket
         self.bucket.shuffle(epoch)
 
-    def make(self, batch_size, shuffle=True):
+    def make(self, batch_size, epoch_seed=0):
         # make a bucket dataset, please call this function before training
-        self.bucket.make(batch_size, shuffle=shuffle)
+        self.bucket.make(batch_size, epoch_seed=epoch_seed)
 
     def __getitem__(self, idx):
         # return a batch data
@@ -199,8 +200,8 @@ class FastLineDataset:
                 data = self.transforms(idx)
                 break
             except:
-                idx = random.randint(0, self.__len__()-1) 
                 logger.warning(f'error data: {idx}')
+                idx = random.randint(0, self.__len__()-1) 
 
         return data 
     
@@ -212,18 +213,12 @@ class FastLineDataset:
                 np.random.shuffle(idxs)
 
         dataset = inject_module
-        dataset.clean()
-        size = math.ceil(n / chunk_size)
-        pbar = tqdm(total=n, desc=f'injecting 1/{size}-{chunk_size}', colour='green')
-        i = 0 
-        while i < n:
-            pbar.update()
-            line = self.read_line(idxs[i])
-            if line is not None:
-                dataset.append(line)
-            i += 1
-
-            if len(dataset) == chunk_size or i == n - 1:
-                yield dataset
-                dataset.clean()
-                pbar.set_description(f'injecting {i+1}/{n}-{chunk_size}')
+        nck = math.ceil(len(idxs) / chunk_size)
+        for i in range(nck):
+            b = i * chunk_size
+            e = min(b + chunk_size, n)
+            dataset.clean()
+            sub_idx = np.sort(idxs[b:e])
+            for j in tqdm(range(len(sub_idx)), colour='green', desc=f"injecting {i}/{nck}"):
+                dataset.append(self.read_line(sub_idx[j]))
+            yield dataset

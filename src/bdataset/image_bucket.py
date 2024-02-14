@@ -103,7 +103,7 @@ class ImageBuckets:
         error = abs(self.aspects[bucket_id] - aspect)
         return bucket_id, error
     
-    def clear(self):
+    def clean(self):
         self.buckets = {}
     
     def inject(self, node: BuckNode):
@@ -153,13 +153,17 @@ class ImageBuckets:
                 f"bucket {bucket_id}: {self.resolutions[bucket_id]}, aspect {self.aspects[bucket_id]:.5f}, \
                   entries {len(self.buckets[bucket_id])}")
 
-    def make(self, batch_size, shuffle=True):
+    def make(self, batch_size, epoch_seed=0):
         """ make a batch node
 
         Args:
             batch_size (int): a batch size of image
             shuffle (bool, optional): shuffle image or not. Defaults to True.
         """
+        if epoch_seed >= 0:
+            # shuffle the bucket
+            self.shuffle(epoch=epoch_seed)
+
         buck_idxs = []
         for bid in self.buckets.keys():
             batch_count = int(math.ceil(len(self.buckets[bid]) / batch_size))
@@ -168,8 +172,6 @@ class ImageBuckets:
         
         self.buck_idxs = buck_idxs
         self.batch_count = len(buck_idxs)
-        if shuffle:
-            self.shuffle(epoch=0)
     
     def __len__(self):
         return self.batch_count
@@ -185,4 +187,3 @@ class ImageBuckets:
         random.seed(self.seed+epoch)
         for key in self.buckets.keys():
             random.shuffle(self.buckets[key])
-        random.shuffle(self.buck_idxs)
