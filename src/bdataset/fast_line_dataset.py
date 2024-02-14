@@ -1,5 +1,6 @@
 # Released under MIT license
 # Copyright (c) 2024 zhifeng.ding (vivo)
+import math
 import mmap
 from tqdm import tqdm
 import contextlib
@@ -212,8 +213,11 @@ class FastLineDataset:
 
         dataset = inject_module
         dataset.clean()
+        size = math.ceil(n / chunk_size)
+        pbar = tqdm(total=n, desc=f'injecting 1/{size}-{chunk_size}', colour='green')
         i = 0 
         while i < n:
+            pbar.update()
             line = self.read_line(idxs[i])
             if line is not None:
                 dataset.append(line)
@@ -222,3 +226,4 @@ class FastLineDataset:
             if len(dataset) == chunk_size or i == n - 1:
                 yield dataset
                 dataset.clean()
+                pbar.set_description(f'injecting {i+1}/{n}-{chunk_size}')
