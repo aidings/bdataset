@@ -181,7 +181,7 @@ class ImageBuckets:
         batch_size = self.buck_idxs[idx].batch_size
         image_index = self.buck_idxs[idx].batch_index * batch_size 
         resolution = self.resolutions[self.buck_idxs[idx].bucket_index]
-        return bucket[image_index:image_index + batch_size], resolution
+        return bucket[image_index:image_index + batch_size], resolution, bucket
     
     def shuffle(self, epoch):
         random.seed(self.seed+epoch)

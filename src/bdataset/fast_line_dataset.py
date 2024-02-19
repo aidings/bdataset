@@ -32,6 +32,8 @@ class InjectDataset:
     
     def __getitem__(self, idx):
         # return a single data
+        if idx > len(self.datas):
+            raise IndexError
         data = None
         while True:
             try:
@@ -50,7 +52,7 @@ class InjectBucketDataset:
         self.datas = []
     
     def __len__(self):
-        return len(self.datas)
+        return len(self.bucket)
     
     def clean(self):
         self.datas = []
@@ -81,7 +83,7 @@ class InjectBucketDataset:
     def __getitem__(self, idx):
         # return a batch data
         datas = []
-        bidxs, resolution = self.bucket[idx]
+        bidxs, resolution, bucket = self.bucket[idx]
         for bdx in bidxs:
             while True:
                 try:
@@ -90,7 +92,7 @@ class InjectBucketDataset:
                     break
                 except:
                     logger.warning(f'error data: {bdx}')
-                    bdx = random.choice(bidxs)
+                    bdx = random.choice(bucket)
         return self.totensor(datas)
 
 
@@ -137,7 +139,7 @@ class FastLineReader:
     @timer('build index')
     def build(self, skip_head=False):
         with open(self.index_path, 'wb') as f:
-            jdict = {"source": self.file_path, "size": os.path.getsize(self.file_path), "skip_head": skip_head, "fpos": []}
+            jdict = {"source": self.file_path.absolute(), "size": os.path.getsize(self.file_path), "skip_head": skip_head, "fpos": []}
             with contextlib.closing(mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)) as m:
                 b = m.tell()
                 pbar = tqdm(total=m.size(), desc=f'{self.index_path.stem} indexing', colour='green')
@@ -203,7 +205,11 @@ class FastLineDataset:
                 logger.warning(f'error data: {idx}')
                 idx = random.randint(0, self.__len__()-1) 
 
-        return data 
+        return data
+    
+    def inject_count(self, chunk_size):
+        n = self.sizes[-1]
+        return math.ceil(n / chunk_size)
     
     def inject(self, inject_module, chunk_size=10_000_000, shuffle=True):
         n = self.sizes[-1]
@@ -213,7 +219,7 @@ class FastLineDataset:
                 np.random.shuffle(idxs)
 
         dataset = inject_module
-        nck = math.ceil(len(idxs) / chunk_size)
+        nck = self.inject_count(chunk_size) 
         for i in range(nck):
             b = i * chunk_size
             e = min(b + chunk_size, n)
